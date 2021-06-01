@@ -1,8 +1,10 @@
-import React , {useState} from 'react';
+import React , {useState, useEffect, useCallback} from 'react';
 import { View, StyleSheet, Text, ScrollView, TextInput, FlatList, Button } from 'react-native';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 import CustomHeaderButton from '../../components/UI/HeaderButton';
-import {useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+
+import * as productActions from '../../store/actions/products';
 
 const EditProductScreen = (props) => {
 
@@ -18,8 +20,25 @@ const EditProductScreen = (props) => {
     const [imageUrl, setImageUrl] = useState(editedProduct? editedProduct.imageUrl: '');
     const [price, setPrice] = useState('');
     const [desc, setDesc] = useState(editedProduct? editedProduct.description: '');
+    const dispatch  = useDispatch();
 
-    // props.navigation.goBack();
+
+    const submitHandler = useCallback(()=> {
+        console.log("Submitted!");
+        if(editedProduct) {
+            dispatch(productActions.updateProduct(prodId,title,desc,imageUrl));
+        }
+        else{
+            dispatch(productActions.createProduct(title, desc, imageUrl, +price));
+        }
+        props.navigation.goBack();
+    },[dispatch, prodId, title, desc, imageUrl, price]);
+
+    useEffect(()=>{
+        props.navigation.setParams({
+            submit: submitHandler
+        });
+    },[submitHandler]);
 
     
 
@@ -53,6 +72,9 @@ const EditProductScreen = (props) => {
 }
 
 EditProductScreen.navigationOptions = navData => {
+
+    const submitFn = navData.navigation.getParam('submit');
+
     return {
         headerTitle: navData.navigation.getParam('productId')?
         'Edit Product': 'Add Product',
@@ -60,11 +82,8 @@ EditProductScreen.navigationOptions = navData => {
             <HeaderButtons HeaderButtonComponent={CustomHeaderButton}>
             <Item
                 title="Save"
-                iconName="ios-checkmar"
-                onPress={
-                    ()=>{
-                    }
-                }
+                iconName="ios-checkmark"
+                onPress={submitFn}
                 />
             </HeaderButtons>
         ),
